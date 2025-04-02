@@ -9,7 +9,7 @@ const pictograms = [
     { emoji: "🩸💨", answers: ["blood gas", "bloodgas"] },
     { emoji: "🍐 A 🌐", answers: ["parasite", "para site"] },
     { emoji: "🚶‍♂️📍Ni 🧰", answers: ["tourniquet", "torniquet", "turny kit"] },
-    { emoji: "😀⚕️👩‍🔬🗓️", answers: ["happy medical lab week", "lab week"] }
+    { emoji: "😀⚕️👩‍🔬🗓️", answers: ["happy medical lab week", "happy med lab week", "happy medical laboratory week"] }
 ];
 
 let currentQuestion = 0;
