@@ -1,79 +1,94 @@
+
 const pictograms = [
-    { emoji: "🎤👘", answer: "microbe" },
-    { emoji: "🦴 🇲 ➡️", answer: "bone marrow" },
-    { emoji: "🐜👁️🧍", answer: "antibody" },
-    { emoji: "🩸🏦", answer: "blood bank" },
-    { emoji: "🦶💉", answer: "foot poke" },
-    { emoji: "🎙️🔭", answer: "microscope" },
-    { emoji: "🩸💨", answer: "blood gas" },
-    { emoji: "🍐 A 🌐", answer: "parasite" },
-    { emoji:  "🚶‍♂️📍Ni 🧰", answer: "torniquet" },
-    { emoji: "😀⚕️👩‍🔬🗓️", answer: "happy medical lab week" }
+    { emoji: "🎤👘", answers: ["microbe"] },
+    { emoji: "🦴 🇲 ➡️", answers: ["bone marrow"] },
+    { emoji: "🐜👁️🧍", answers: ["antibody", "anti body"] },
+    { emoji: "🩸🏦", answers: ["blood bank", "bloodbank"] },
+    { emoji: "🦶💉", answers: ["foot poke", "heel poke", "heel stick"] },
+    { emoji: "🎙️🔭", answers: ["microscope", "micro scope", "micro-scope"] },
+    { emoji: "🩸💨", answers: ["blood gas", "bloodgas"] },
+    { emoji: "🍐 A 🌐", answers: ["parasite", "para site"] },
+    { emoji: "🚶‍♂️📍Ni 🧰", answers: ["tourniquet", "torniquet", "turny kit"] },
+    { emoji: "😀⚕️👩‍🔬🗓️", answers: ["happy medical lab week", "lab week"] }
 ];
 
 let currentQuestion = 0;
+let skippedQuestions = [];
+let answeredQuestions = [];
 
-const pictogramElement = document.getElementById("pictogram");
+
+const pictogram = document.getElementById("pictogram");
 const userInput = document.getElementById("userInput");
-const submitButton = document.getElementById("submitAnswer");
 const feedback = document.getElementById("feedback");
-const endScreen = document.getElementById("end-screen"); 
+const gameContainer = document.querySelector(".game-container");
+const endScreen = document.getElementById("end-screen");
 
-// Function to load the next pictogram
+// Load the current emoji
 function loadPictogram() {
-    pictogramElement.textContent = pictograms[currentQuestion].emoji;
-    userInput.value = ""; 
-    feedback.textContent = ""; 
+    pictogram.textContent = pictograms[currentQuestion].emoji;
+    userInput.value = "";
+    feedback.textContent = "";
 }
-
-// Initial load
-loadPictogram();
-
-// Function to check answer
+//
+// Check the user’s input
 function checkAnswer() {
-    let userAnswer = userInput.value.trim().toLowerCase(); // Case insensitive
-    let correctAnswer = pictograms[currentQuestion].answer.toLowerCase();
+    const userAnswer = userInput.value.trim().toLowerCase();
+    const validAnswers = pictograms[currentQuestion].answers.map(a => a.toLowerCase());
 
-    if (userAnswer === correctAnswer) {
+    if (validAnswers.includes(userAnswer)) {
         feedback.textContent = "Correct!";
         feedback.style.color = "green";
 
+        //  Track this question as answered so it doesn't repeat
+        answeredQuestions.push(currentQuestion);
+
+        // Also remove it from the skipped list if it was skipped
+        skippedQuestions = skippedQuestions.filter(i => i !== currentQuestion);
+
         setTimeout(() => {
             currentQuestion++;
-
-            if (currentQuestion < pictograms.length) {
-                loadPictogram();
-            } else {
-                // Show the end screen instead of replacing the container
-                showEndScreen();
-            }
-        }, 1000); // Wait 1 second before showing next question
-
+            goToNextOrFinish();
+        }, 1000);
     } else {
         feedback.textContent = "Try again!";
         feedback.style.color = "red";
     }
 }
 
-// Event Listener for Clicking Submit Button
-submitButton.addEventListener("click", checkAnswer);
 
-// Event Listener for Pressing "Enter" Key
-userInput.addEventListener("keypress", (event) => {
-    if (event.key === "Enter") {
-        event.preventDefault(); // Prevents form submission (if inside a form)
-        checkAnswer();
-    }
-});
-
-// Function to show the end screen
-function showEndScreen() {
-    document.querySelector(".game-container").style.display = "none"; // Hide game container
-    endScreen.classList.remove("hidden"); // Show the end screen
-    startConfetti(); 
+// Handle skipping a question
+function skipQuestion() {
+    skippedQuestions.push(currentQuestion);
+    currentQuestion++;
+    goToNextOrFinish();
 }
 
-// Confetti effect using canvas
+// Go to next question or revisit skipped ones
+function goToNextOrFinish() {
+    // Go forward through unanswered questions
+    while (currentQuestion < pictograms.length && answeredQuestions.includes(currentQuestion)) {
+        currentQuestion++;
+    }
+
+    if (currentQuestion < pictograms.length) {
+        loadPictogram();
+    } else if (skippedQuestions.length > 0) {
+        currentQuestion = skippedQuestions.shift();
+        loadPictogram();
+    } else {
+        showEndScreen();
+    }
+}
+
+
+// Show the end screen with confetti
+function showEndScreen() {
+    gameContainer.style.display = "none";
+    endScreen.classList.remove("hidden");
+    startConfetti();
+}
+
+// Confetti effect
 function startConfetti() {
     const canvas = document.getElementById("confettiCanvas");
     const ctx = canvas.getContext("2d");
@@ -81,7 +96,6 @@ function startConfetti() {
     canvas.height = window.innerHeight;
 
     let particles = [];
-
     for (let i = 0; i < 100; i++) {
         particles.push({
             x: Math.random() * canvas.width,
@@ -94,7 +108,7 @@ function startConfetti() {
 
     function updateConfetti() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach((p) => {
+        particles.forEach(p => {
             p.y += p.speedY;
             if (p.y > canvas.height) p.y = 0;
             ctx.fillStyle = p.color;
@@ -102,9 +116,22 @@ function startConfetti() {
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             ctx.fill();
         });
-
         requestAnimationFrame(updateConfetti);
     }
 
     updateConfetti();
 }
+
+// Event listeners
+document.getElementById("submitAnswer").addEventListener("click", checkAnswer);
+document.getElementById("skipAnswer").addEventListener("click", skipQuestion);
+userInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+        checkAnswer();
+    }
+});
+
+// Initial load
+loadPictogram();
+
+// commit test
