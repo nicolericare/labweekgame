@@ -133,3 +133,5 @@ userInput.addEventListener("keypress", (e) => {
 
 // Initial load
 loadPictogram();
+
+// commit test
